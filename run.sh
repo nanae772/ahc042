@@ -4,7 +4,7 @@ set -eu
 bin_name=$(basename $(pwd))
 
 # Build
-cargo build
+cargo build --quiet
 
 # Test
 for file in "./input"/*; do
