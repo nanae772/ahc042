@@ -1,5 +1,5 @@
 #![allow(clippy::needless_range_loop, clippy::ptr_arg)]
-use std::fmt;
+use std::{fmt, io::Read};
 
 const BOARD_SIZE: usize = 20;
 
@@ -45,7 +45,7 @@ impl fmt::Display for Operation {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 struct BoardState {
     n: usize,
     board: Vec<Vec<RoomState>>,
@@ -158,35 +158,50 @@ impl fmt::Debug for BoardState {
     }
 }
 
-fn input_parser() -> BoardState {
-    proconio::input! {
-        n: usize,
-    }
-
-    assert_eq!(n, BOARD_SIZE);
-    let mut board = vec![vec![RoomState::Vacant; n]; n];
-
-    for i in 0..n {
-        proconio::input! {
-            si: proconio::marker::Chars,
-        }
-        assert_eq!(si.len(), n);
-        for j in 0..n {
-            board[i][j] = match si[j] {
-                'x' => RoomState::Oni,
-                'o' => RoomState::Fuku,
+/// x, o, . で盤面を表す文字列からBoardStateを生成する
+fn generate_board_from_string(board_size: usize, board_str: &str) -> BoardState {
+    let board_rows = board_str.split_whitespace();
+    let mut board = vec![vec![RoomState::Vacant; board_size]; board_size];
+    let mut num_oni = 0;
+    let mut num_fuku = 0;
+    for (i, row) in board_rows.enumerate() {
+        let row = row.chars();
+        for (j, room) in row.enumerate() {
+            board[i][j] = match room {
+                'x' => {
+                    num_oni += 1;
+                    RoomState::Oni
+                }
+                'o' => {
+                    num_fuku += 1;
+                    RoomState::Fuku
+                }
                 '.' => RoomState::Vacant,
                 _ => unreachable!(),
-            }
+            };
         }
     }
-
     BoardState {
-        n,
+        n: board_size,
         board,
-        num_oni: 2 * n,
-        num_fuku: 2 * n,
+        num_oni,
+        num_fuku,
     }
+}
+
+fn input_parser() -> BoardState {
+    let mut buf = String::new();
+
+    let _ = std::io::stdin().read_line(&mut buf).is_ok();
+    let n = buf.trim().parse::<usize>().unwrap();
+    buf.clear();
+
+    assert_eq!(n, BOARD_SIZE);
+
+    let _ = std::io::stdin().read_to_string(&mut buf).is_ok();
+    let board_str = &buf;
+
+    generate_board_from_string(n, board_str)
 }
 
 fn find_oni(board_state: &BoardState) -> (usize, usize) {
@@ -306,7 +321,83 @@ fn main() {
 
 #[cfg(test)]
 mod unittests {
+    use std::vec;
+
     use super::*;
+
+    #[test]
+    fn test_generate_board_from_string() {
+        let board = generate_board_from_string(
+            3,
+            r"
+            x.o
+            o.x
+            .xo
+        ",
+        );
+
+        assert_eq!(
+            board,
+            BoardState {
+                n: 3,
+                board: vec![
+                    vec![RoomState::Oni, RoomState::Vacant, RoomState::Fuku],
+                    vec![RoomState::Fuku, RoomState::Vacant, RoomState::Oni],
+                    vec![RoomState::Vacant, RoomState::Oni, RoomState::Fuku],
+                ],
+                num_oni: 3,
+                num_fuku: 3,
+            }
+        );
+    }
+
+    #[test]
+    fn test_generate_board_from_string_4x4() {
+        let board = generate_board_from_string(
+            4,
+            r"
+            x.ox
+            o.x.
+            .xo.
+            o.x.
+        ",
+        );
+
+        assert_eq!(
+            board,
+            BoardState {
+                n: 4,
+                board: vec![
+                    vec![
+                        RoomState::Oni,
+                        RoomState::Vacant,
+                        RoomState::Fuku,
+                        RoomState::Oni
+                    ],
+                    vec![
+                        RoomState::Fuku,
+                        RoomState::Vacant,
+                        RoomState::Oni,
+                        RoomState::Vacant
+                    ],
+                    vec![
+                        RoomState::Vacant,
+                        RoomState::Oni,
+                        RoomState::Fuku,
+                        RoomState::Vacant
+                    ],
+                    vec![
+                        RoomState::Fuku,
+                        RoomState::Vacant,
+                        RoomState::Oni,
+                        RoomState::Vacant
+                    ],
+                ],
+                num_oni: 5,
+                num_fuku: 4,
+            }
+        );
+    }
 
     #[test]
     fn test_apply_operation_left() {
