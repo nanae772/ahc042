@@ -13,7 +13,3 @@ for file in "../input"/*; do
         ./target/release/vis ../input/$filename ../output/$filename | sed 's/Score = //' >> ../results.txt
     fi
 done
-
-cd ..
-
-python stats.py < results.txt

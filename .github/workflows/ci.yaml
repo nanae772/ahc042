@@ -1,4 +1,4 @@
-name: Rust
+name: ahc-ci
 
 on:
   push:
@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build-and-run:
 
     runs-on: ubuntu-latest
 
@@ -24,3 +24,9 @@ jobs:
       run: cargo test --verbose
     - name: サンプル100個に対する実行
       run: ./run.sh
+    - name: 実行結果のスコアを計算
+      run: ./compute_score.sh
+    - name: スコアの統計値出力
+      run : python stats.py < results.txt
+    # TODO: 結果をメールなどに通知したい
+    # TODO: 計算結果をgoogle spreadsheet等にアップロードしたい
