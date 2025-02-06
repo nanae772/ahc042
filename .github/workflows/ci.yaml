@@ -27,6 +27,17 @@ jobs:
     - name: 実行結果のスコアを計算
       run: ./compute_score.sh
     - name: スコアの統計値出力
-      run : python stats.py < results.txt
+      run : python stats.py < results.txt > stats.txt
+    - name: スコアのタグを生成
+      run: |
+        SCORE=$(tail -1 stats.txt | sed 's/Total: //')
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        TAG_NAME="score-${SCORE}-${COMMIT_HASH}"
+
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        git tag -a "$TAG_NAME" -m "Score: $SCORE (Commit: $COMMIT_HASH)"
+        git push origin --tags
     # TODO: 結果をメールなどに通知したい
     # TODO: 計算結果をgoogle spreadsheet等にアップロードしたい
