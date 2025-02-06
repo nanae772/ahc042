@@ -6,7 +6,9 @@ bin_name=$(basename $(pwd))
 # Build
 cargo build --quiet
 
-# Test
+# Run
+mkdir -p output
+
 for file in "./input"/*; do
     if [ -f $file ]; then
         filename=$(basename "$file")
