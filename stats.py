@@ -9,7 +9,11 @@ def main():
         scores.append(int(line))
 
     print(
-        f"Min: {min(scores)}\nMax: {max(scores)}\nMean: {mean(scores)}\nMedian: {median(scores)}"
+        f"Min: {min(scores)}\n"
+        + f"Max: {max(scores)}\n"
+        + f"Mean: {mean(scores)}\n"
+        + f"Median: {median(scores)}\n"
+        + f"Total: {sum(scores)}"
     )
 
 
